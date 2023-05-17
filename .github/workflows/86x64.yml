@@ -3,7 +3,7 @@
 # Lisence: MIT
 # Author: chensir
 #=================================================
-name: Build Lean's OpenWrt for 86x64
+name: Build Lean's OpenWrt for x86_64
 
 on:
   release:
@@ -12,7 +12,7 @@ on:
     branches:
       - master
     paths:
-      - "86x64.config"
+      - "x86_64.config"
   schedule:
     - cron: 0 0 * * 1
   watch:
@@ -65,7 +65,7 @@ jobs:
 
       - name: Load custom configuration
         env:
-          CONFIG_FILE: "86x64.config"
+          CONFIG_FILE: "x86_64.config"
           DIY_SH: "diy.sh"
         run: |
           [ -e files ] && mv files openwrt/files
@@ -103,7 +103,7 @@ jobs:
         uses: actions/upload-artifact@main
         if: always()
         with:
-          name: OpenWrt_86x64_bin-${{ env.Date_and_RunNumber }}
+          name: OpenWrt_x86_64_bin-${{ env.Date_and_RunNumber }}
           path: openwrt/bin
 
       - name: Remove packages
@@ -118,13 +118,13 @@ jobs:
         uses: actions/upload-artifact@main
         if: always()
         with:
-          name: OpenWrt-86x64-Firmware-${{ env.Date_and_RunNumber }}
+          name: OpenWrt-x86_64-Firmware-${{ env.Date_and_RunNumber }}
           path: ${{ env.Firmware_path }}
 
       - name: Publish release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: openwrt/bin/targets/x86/86x64/*
+          files: openwrt/bin/targets/x86/x86_64/*
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASES_DEPLOY_TOKEN }}
