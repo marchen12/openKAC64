@@ -15,8 +15,8 @@ on:
       - "OPEWRTAC2100.config"
   schedule:
     - cron: 0 0 * * 1
-  #watch:
-  #  types: [started]
+ watch:
+     types: [started]
   workflow_dispatch:
     inputs:
       logs:
@@ -24,7 +24,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
