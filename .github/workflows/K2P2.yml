@@ -67,6 +67,7 @@ jobs:
         env:
           CONFIG_FILE: "K2P2.config"
           DIY_SH: "d1.sh"
+          DIY_2_SH: "d2.sh"
         run: |
           [ -e files ] && mv files openwrt/files
           [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
