@@ -13,6 +13,7 @@ on:
       - master
     paths:
       - "x86_64.config"
+  on:      
   schedule:
     - cron:  '45 2,14 * * *'
   watch:
