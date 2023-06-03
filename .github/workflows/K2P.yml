@@ -20,7 +20,7 @@ on:
       logs:
         description: 'You can input logs here'  
   schedule:
-    - cron: 0 */6 * * *     
+    - cron: 0 */3 * * *     
 
 jobs:
   build:
