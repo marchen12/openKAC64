@@ -12,16 +12,16 @@ on:
     branches:
       - master
     paths:
-      - "x86_64.config"
-  schedule:
-    - cron: 0 */3 * * *     
+      - "x86_64.config"    
   watch:
      types: [started]
      workflow_dispatch:
      inputs:
       logs:
         description: 'You can input logs here'   
-
+  schedule:
+    - cron: 0 */3 * * *     
+     
 jobs:
   build:
     runs-on: ubuntu-20.04
