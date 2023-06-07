@@ -15,7 +15,7 @@ on:
     paths:
       - "x86_64.config"
   schedule:
-    - cron: 0 0 * * 1
+    - cron: 0 */3 * * *
   watch:
     types: [started]
   workflow_dispatch:
