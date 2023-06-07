@@ -19,8 +19,8 @@ on:
     inputs:
       logs:
         description: 'You can input logs here'  
-  schedule:
-    - cron: 0 */3 * * *     
+#  schedule:
+#    - cron: 0 */3 * * *     
      
 jobs:
   build:
