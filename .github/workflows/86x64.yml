@@ -1,3 +1,4 @@
+
 #=================================================
 # Description: 86x64 Openwrt Autobuild
 # Lisence: MIT
@@ -13,15 +14,15 @@ on:
       - master
     paths:
       - "x86_64.config"
+  schedule:
+    - cron: 0 0 * * 1
   watch:
     types: [started]
   workflow_dispatch:
     inputs:
       logs:
         description: 'You can input logs here'  
-#  schedule:
-#    - cron: 0 */3 * * *     
-     
+
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -47,7 +48,6 @@ jobs:
           sudo -E apt-get -qq clean
           # curl -fsSL https://raw.githubusercontent.com/P3TERX/dotfiles/master/.bashrc >> ~/.bashrc
           sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
-
       - name: Clone source code
         env:
           REPO_URL: https://github.com/coolsnowwolf/lede
@@ -59,7 +59,6 @@ jobs:
           cd openwrt
           sed -i "/helloworld/d" "feeds.conf.default"
           echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
-
       - name: Update & install feeds
         run: cd openwrt && ./scripts/feeds update -a && ./scripts/feeds install -a
 
@@ -77,29 +76,24 @@ jobs:
           echo "OpenWrt AutoBuild by chensir - $Date_and_RunNumber" >> package/base-files/files/etc/banner
           ../$DIY_SH
           make defconfig
-
       # - name: SSH connection to Actions
       #   uses: P3TERX/debugger-action@master
 
       - name: Download package
-        working-directory: ./openwrt
         run: |
-         make download -j$(nproc)
-         find dl -size -1024c -exec ls -l {} \;
-         find dl -size -1024c -exec rm -f {} \;
-
+          cd openwrt && make download -j$(($(nproc)+1))
+          find dl -size -1024c -exec ls -l {} \;
+          find dl -size -1024c -exec rm -f {} \;
       - name: Multi-thread compile
         run: |
           cd openwrt
           echo -e "$(($(nproc)+1)) thread compile"
           make -j$(($(nproc)+1))
-
       - name: Single-thread compile
         if: failure()
         run: |
           cd openwrt
           make -j1 V=s
-
       - name: Upload bin directory
         uses: actions/upload-artifact@main
         if: always()
