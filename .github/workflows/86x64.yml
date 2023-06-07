@@ -72,7 +72,7 @@ jobs:
           [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
           chmod +x $DIY_SH
           cd openwrt
-          echo 'CONFIG_KERNEL_BUILD_USER="chensir"' >> ./.config
+          echo 'CONFIG_KERNEL_BUILD_USER="marchen12"' >> ./.config
           echo "CONFIG_GRUB_TITLE=\"OpenWrt AutoBuild by marchen12-$Date_and_RunNumber\"" >> ./.config
           echo "OpenWrt AutoBuild by marchen12 - $Date_and_RunNumber" >> package/base-files/files/etc/banner
           ../$DIY_SH
