@@ -7,18 +7,18 @@
 #
 name: OpenWrt-CI
 
-#on:
-#  schedule:
-#    - cron: 0 20 * * *
+  
 on:
   repository_dispatch:
   workflow_dispatch:
+  schedule:
+    - cron: 0 20 * * *
 
 jobs:
 
   build_openwrt:
 
-    name: Build OpenWrt Firmware
+    name: Build x86_64OpenWrt Firmware
 
     runs-on: ubuntu-latest
 
@@ -39,55 +39,83 @@ jobs:
           sudo -E apt clean
           sudo -E timedatectl set-timezone "Asia/Shanghai"
 
-      - name: Checkout OpenWrt
-        uses: actions/checkout@v3
+           - name: Clone source code
+           env:
+          REPO_URL: https://github.com/coolsnowwolf/lede
+          REPO_BRANCH: master
+           run: git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
 
-      - name: Update feeds
+      - name: add custom source
         run: |
-          sed -i 's/#src-git helloworld/src-git helloworld/g' ./feeds.conf.default
-          ./scripts/feeds update -a
-          ./scripts/feeds install -a
+          cd openwrt
+          sed -i "/helloworld/d" "feeds.conf.default"
+          echo "src-git helloworld https://github.com/fw876/helloworld.git" >> "feeds.conf.default"
 
-      - name: Generate configuration file
-        run: make defconfig
+      - name: Update & install feeds
+        run: cd openwrt && ./scripts/feeds update -a && ./scripts/feeds install -a
 
-      - name: Download packages
-        run: make download -j16
-
-      - name: Compile firmware
+      - name: Load custom configuration
+        env:
+          CONFIG_FILE: "x86_64.config"
+          DIY_SH: "diy.sh"
         run: |
-          make -j$(nproc) || make -j1 V=s
-          echo "======================="
-          echo "Space usage:"
-          echo "======================="
-          df -h
-          echo "======================="
-          du -h --max-depth=1 ./ --exclude=build_dir --exclude=bin
-          du -h --max-depth=1 ./build_dir
-          du -h --max-depth=1 ./bin
+          [ -e files ] && mv files openwrt/files
+          [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+          chmod +x $DIY_SH
+          cd openwrt
+          echo 'CONFIG_KERNEL_BUILD_USER="chensir"' >> ./.config
+          echo "CONFIG_GRUB_TITLE=\"OpenWrt AutoBuild by chensir-$Date_and_RunNumber\"" >> ./.config
+          echo "OpenWrt AutoBuild by chensir - $Date_and_RunNumber" >> package/base-files/files/etc/banner
+          ../$DIY_SH
+          make defconfig
 
-      - name: Prepare artifact
+      # - name: SSH connection to Actions
+      #   uses: P3TERX/debugger-action@master
+
+      - name: Download package
         run: |
-          mkdir -p ./artifact/package
-          mkdir -p ./artifact/buildinfo
-          rm -rf $(find ./bin/targets/ -type d -name "packages")
-          cp -rf $(find ./bin/packages/ -type f -name "*.ipk") ./artifact/package/
-          cp -rf $(find ./bin/targets/ -type f -name "*.buildinfo" -o -name "*.manifest") ./artifact/buildinfo/
+          cd openwrt && make download -j$(($(nproc)+1))
+          find dl -size -1024c -exec ls -l {} \;
+          find dl -size -1024c -exec rm -f {} \;
 
-      - name: Upload buildinfo
-        uses: actions/upload-artifact@v3
-        with:
-          name: OpenWrt_buildinfo
-          path: ./artifact/buildinfo/
+      - name: Multi-thread compile
+        run: |
+          cd openwrt
+          echo -e "$(($(nproc)+1)) thread compile"
+          make -j$(($(nproc)+1))
 
-      - name: Upload package
-        uses: actions/upload-artifact@v3
-        with:
-          name: OpenWrt_package
-          path: ./artifact/package/
+      - name: Single-thread compile
+        if: failure()
+        run: |
+          cd openwrt
+          make -j1 V=s
 
-      - name: Upload firmware
-        uses: actions/upload-artifact@v3
+      - name: Upload bin directory
+        uses: actions/upload-artifact@main
+        if: always()
         with:
-          name: OpenWrt_firmware
-          path: ./bin/targets/
+          name: OpenWrt_x86_64_bin-${{ env.Date_and_RunNumber }}
+          path: openwrt/bin
+
+      - name: Remove packages
+        if: always()
+        run: |
+          cd openwrt/bin/targets/*/*
+          rm -rf packages
+          echo "Firmware_path=$(pwd)" >> $GITHUB_ENV
+          
+          
+      - name: Upload firmware to Artifact
+        uses: actions/upload-artifact@main
+        if: always()
+        with:
+          name: OpenWrt-x86_64-Firmware-${{ env.Date_and_RunNumber }}
+          path: ${{ env.Firmware_path }}
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: openwrt/bin/targets/ramips/mt7621/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_DEPLOY_TOKEN }}
