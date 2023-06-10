@@ -15,15 +15,13 @@ on:
     - cron: 0 20 * * *
 
 jobs:
+   build:
+     runs-on: ubuntu-latest
 
-  build_x86_64openwrt:
-
-    name: Build x86_64OpenWrt Firmware
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Space cleanup and Initialization environment
+     steps:
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Initialization environment
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
