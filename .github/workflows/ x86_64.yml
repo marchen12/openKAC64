@@ -5,7 +5,7 @@
 #
 # Copyright (C) 2020 KFERMercer
 #
-name: OpenWrt-CI
+name: OpenWrt-x86_64
 
   
 on:
@@ -16,7 +16,7 @@ on:
 
 jobs:
 
-  build_openwrt:
+  build_x86_64openwrt:
 
     name: Build x86_64OpenWrt Firmware
 
