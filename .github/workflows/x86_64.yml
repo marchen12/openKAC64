@@ -3,7 +3,7 @@
 # Lisence: MIT
 # Author: chensir
 #=================================================
-name: Build  OpenWrt forx86_64
+name:  xx OpenWrt x86_64
 
 on:
   release:
